@@ -1,0 +1,4 @@
+crop,n,states,slope_pct_per_10pts,ci_low,ci_high,spearman_rho,p_value
+maize,28,9,-0.36,-4.37,2.22,-0.04,0.85
+millet,33,9,-2.71,-7.29,0.26,-0.18,0.32
+sorghum,33,9,-1.09,-5.23,3.25,0.01,0.97

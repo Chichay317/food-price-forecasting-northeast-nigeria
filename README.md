@@ -160,20 +160,53 @@ From the latest data (September 2026 for Borno, August 2026 for Yobe), with toda
 
 *Prices are per market unit (see the Data table). Based on the backtest, if markets turn turbulent these ranges should be expected to cover about 60 to 70% of outcomes rather than 80%.*
 
+## Extension: does rainfall explain prices after the harvest?
+
+The models above used past prices only. Rainfall is the obvious outside signal for locally grown staples, so this extension asks whether a wetter or drier rainy season changes what happens to cereal prices after the harvest.
+
+**Rainfall data.** WFP's *Nigeria: Rainfall Indicators at Subnational Level* (HDX, CC BY), which aggregates CHIRPS satellite rainfall to each state every 10 days from 1981 and gives the 1989–2018 average for the same period. Each rainy season is summarised as June–September rainfall as a percentage of that average. State codes were checked against state size (Borno, the second-largest state, has the second-most satellite pixels).
+
+**Borno and Yobe alone cannot answer the question.** Every rainy season during the price records (2017–2026) was normal or wetter (101–140% of normal), and the wettest years (2022, 2024) coincide with major floods and with the 2023–24 price shock. So the extension uses the **pre-shock records of 10 northern states** (Adamawa, Borno, Gombe, Jigawa, Kaduna, Kano, Katsina, Kebbi, Yobe, Zamfara), harvests 2017–2022. Southern states were left out because their millet and sorghum mostly come from the north.
+
+**Design.** For each state, crop and year, the change in the state's median price from before the harvest (June–August) to after it (October–December), requiring at least two of the three months in each window. Imported rice serves as a **control**: it is affected by inflation and the exchange rate but not by Nigerian rain, so each local cereal's change is measured relative to imported rice in the same state and season. Confidence intervals resample whole states, since seasons in one state share a market.
+
+**1. The harvest effect is clear.** After the harvest, local cereals fall in price relative to imported rice:
+
+| Crop | Change vs imported rice | 95% CI | State-seasons (states) |
+|---|---:|---|---:|
+| Maize | −16.3% | −19.1 to −13.0 | 28 (9) |
+| Millet | −12.1% | −16.4 to −7.5 | 33 (9) |
+| Sorghum | −8.2% | −12.6 to −3.1 | 33 (9) |
+
+**2. How much it rained made no detectable difference.** Within the range observed (90–140% of normal), the post-harvest change does not depend measurably on rainfall:
+
+| Crop | Change per +10 points of rainfall | 95% CI | Spearman rho (p) |
+|---|---:|---|---|
+| Maize | −0.4% | −4.4 to +2.2 | −0.04 (0.85) |
+| Millet | −2.7% | −7.3 to +0.3 | −0.18 (0.32) |
+| Sorghum | −1.1% | −5.2 to +3.3 | 0.01 (0.97) |
+
+Millet leans in the expected direction (wetter season, larger fall), but its interval reaches zero. **No state-season in 2017–2022 had less than 90% of normal rainfall, so the effect of a drought could not be tested.**
+
+![Post-harvest price change against rainy-season rainfall](results/rain_vs_harvest_change.png)
+
+**What this adds.** The predictable part of these prices is the seasonal harvest pattern, which is regular enough to plan around. Rainfall within the normal-to-wet range seen in recent years would not have improved the forecasts, so adding it to the backtest was not pursued. A test of drought years would need either longer price records or a dry season to occur.
+
 ## Limitations
 
 - **Two states, five foods.** Results describe conflict-affected markets in north-east Nigeria and may not hold elsewhere.
 - **One test period with one shock.** The comparison rests on 2021 to 2026, a period dominated by a single policy shock and its reversal.
 - **State prices are medians across a changing set of markets.** The composition check found little effect, but it cannot rule it out entirely.
 - **The recording method changed** from `actual` to `aggregate` prices around 2020, which may have changed how smooth the series are.
-- **No outside information.** The models used past prices only. Exchange rates, fuel prices and rainfall might help; in particular, no model could anticipate a policy announcement.
+- **No outside information in the forecasts.** The models used past prices only; no model could anticipate a policy announcement. The rainfall extension found no detectable link between rainy-season rainfall and post-harvest prices, but it rests on 9 states with mostly one market each, and no drought seasons occurred in the period.
 - **Small data for machine learning**, and model settings were chosen once rather than tuned, so a better-configured model might do better. Tuning on the test period would have been unfair.
 - **Percentage error is asymmetric**: a forecast that is too high can be off by more than 100%, one that is too low cannot.
 - **The outlook is illustrative, not advice.**
 
 ## Future work
 
-- Add outside indicators: the exchange rate, petrol prices (also in the WFP data) and rainfall
+- Add outside indicators: the exchange rate and petrol prices (also in the WFP data)
+- Revisit the rainfall link with longer records that include drought years, and with flood indicators
 - Prediction ranges that widen quickly in turbulent periods without leaning in the direction of the latest trend
 - Test the methods on the pre-2023 records of the other twelve states
 - Forecast at market level using models that handle missing months directly
@@ -187,14 +220,21 @@ From the latest data (September 2026 for Borno, August 2026 for Yobe), with toda
 │   └── price_panel.csv                                  # the ten monthly series (observed = real price)
 ├── notebooks/
 │   ├── food-01-data-check.ipynb    # download, checks, series selection, cleaning, seasonality
-│   └── food-02-forecast.ipynb      # backtest, baselines, ETS, LightGBM, confidence intervals, ranges, outlook
+│   ├── food-02-forecast.ipynb      # backtest, baselines, ETS, LightGBM, confidence intervals, ranges, outlook
+│   └── food-03-rainfall.ipynb      # extension: rainy-season rainfall vs post-harvest prices, 10 northern states
 ├── results/
 │   ├── price_series.png
 │   ├── forecasts.csv               # every backtest forecast and its error
 │   ├── vs_last_value.csv           # differences from "last value" with confidence intervals
 │   ├── prediction_ranges.csv       # every backtest range and whether the real price fell inside
 │   ├── price_outlook.csv
-│   └── price_outlook.png
+│   ├── price_outlook.png
+│   ├── rainy_season.csv            # June-September rainfall, % of normal: Borno and Yobe
+│   ├── rainy_season_north.csv      # the same for 10 northern states
+│   ├── harvest_change.csv          # pre- to post-harvest price change per state, crop and year
+│   ├── harvest_effect.csv          # average change vs imported rice, with CIs
+│   ├── rain_price_link.csv         # change per +10 points of rainfall, with CIs
+│   └── rain_vs_harvest_change.png
 └── README.md
 ```
 
@@ -207,6 +247,8 @@ The notebooks run on Kaggle without a GPU. Notebook 01 downloads the latest data
 - World Food Programme (2026). *Nigeria – Food Prices*. Humanitarian Data Exchange. CC BY-IGO.
 - Hyndman, R. J. & Athanasopoulos, G. (2021). *Forecasting: Principles and Practice*, 3rd edition. OTexts.
 - Ke, G. et al. (2017). LightGBM: A Highly Efficient Gradient Boosting Decision Tree. *NeurIPS*.
+- World Food Programme (2026). *Nigeria: Rainfall Indicators at Subnational Level*. Humanitarian Data Exchange. CC BY.
+- Funk, C. et al. (2015). The climate hazards infrared precipitation with stations (CHIRPS). *Scientific Data*, 2, 150066.
 - Künsch, H. R. (1989). The jackknife and the bootstrap for general stationary observations. *Annals of Statistics*, 17(3).
 
 ## Author
